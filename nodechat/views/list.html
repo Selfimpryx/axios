@@ -1,0 +1,145 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        /* *{
+            margin: 0;
+            padding: 0;
+        } */
+        #box{
+            width: 100%;
+            padding: 10px;
+            border: 1px solid red;
+        }
+    </style>
+</head>
+
+<body>
+    在线人数: <span id="num"></span> <button id="joinman">男生组</button>&nbsp;&nbsp;&nbsp;<button id="joinwoman">女生组</button>
+    <hr>
+    向谁<select name="" id="name" onchange="parveTo = this.value" ></select>说<input type="text" id="siliaoipt"><button id="siliaobtn">发起私聊</button>
+    <hr>
+    发起群聊: <input type="text" id="qunliaoipt"><button id="qunliaobtn">发起群聊</button>
+    <hr>
+    <div id="box">
+        <ul id="ul">
+        </ul>
+    </div>
+    <hr>
+
+    {{username}}正在说<input id='ipt' type="text"> <button id='btn'>发送</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io('http://localhost:8888');
+      var parveTo;
+      var groupTo;
+      
+      socket.on('connect', function(){
+          console.log('连接上了')
+          socket.emit('login',{
+              id : {{id}}
+          })
+      });
+      socket.on('event', function(data){});
+      socket.on('disconnect', function(){
+          console.log('断开连接了')
+      });
+
+      socket.on('online',(data)=>{
+          console.log(Object.values(data.online))
+          let users = Object.values(data.online)
+          document.querySelector('#num').innerHTML = Object.values(data.online).length
+          var select = document.querySelector('#name')
+          for(var i = 0;i<users.length;i++){
+              var u = users[i]
+              var html;
+              html+=`
+              <option value='${u.socketid}'>${u.username}</option>
+              `
+          }
+          select.innerHTML = html
+      })
+
+      document.querySelector('#siliaobtn').onclick = function() {
+          var siliaoval = document.querySelector('#siliaoipt').value
+          socket.emit('siliao',{
+              parveTo,
+              siliaoval
+          })
+      }
+
+      document.querySelector('#btn').onclick = function(){
+        var content = document.querySelector('#ipt').value
+        console.log(content)
+        socket.emit('sendmsg',{
+            content:content
+        })
+      }
+      socket.on('allmessage',function(data){
+          console.log(data)
+          let ul = document.querySelector('#ul')
+        //   ul.innerHTML+=data
+        ul.innerHTML += `<li>${data}</li>`
+      })
+
+      //加入男生组
+      document.querySelector('#joinman').onclick = function () {
+          socket.emit('joingroup','man')
+          groupTo = 'man'
+      }
+      //加入男生组
+      document.querySelector('#joinwoman').onclick = function () {
+          socket.emit('joingroup','women')
+          groupTo = 'woman'
+      }
+
+      //发起群聊
+      document.querySelector('#qunliaobtn').onclick = function() {
+          //获取发起群聊的消息
+          var msg = document.querySelector('#qunliaoipt').value
+          socket.emit('qunliao',{
+              groupTo,
+              msg
+          })
+      }
+
+    </script> 
+
+    <script>
+        // document.querySelector('#btn').onclick = function () {
+        //     var content = document.querySelector('#ipt').value;
+        //     var xhr = new XMLHttpRequest;
+        //     xhr.open('post', '/add');
+        //     // : application/
+        //     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        //     //键值对的形式
+        //     xhr.send('msg=' + content);
+        //     xhr.onreadystatechange = function () {
+        //         if (xhr.readyState == 4 && xhr.status == 200) {
+        //             console.log(xhr.responseText)
+        //             //转换为json数组
+        //             var arr = JSON.parse(xhr.responseText)
+        //             // [{"username":"小明","content":"你好"},
+        //             // {"username":"小红","content":"想撩我吗?"},+
+        //             // {"username":"小刚","content":"撩你妈卖批"}
+        //             // ,{"username":"111"},{"username":"111","content":"1111"}]
+        //             console.log(arr)
+        //             var html = '<ul>'
+        //             for (var i = 0; i < arr.length; i++) {
+        //                 console.log(arr[i].username)
+        //                 html += '<li>' + arr[i].username+'&nbsp;&nbsp;' +arr[i].content + '</li>'
+        //             }
+        //             html += '</ul>'
+        //             document.querySelector('#box').innerHTML = html
+        //         }
+        //     }
+        // }
+    </script>
+</body>
+
+</html>
